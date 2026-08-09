@@ -1,0 +1,3 @@
+openai>=1.0.0
+# Optionnel: pour Gemini API
+# google-generativeai>=0.3.0
