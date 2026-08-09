@@ -1,0 +1,31 @@
+{
+  "agency": {
+    "name": "Komara Agency",
+    "slogan": "Vision. Impact. Excellence.",
+    "founder": "Ndine Komara",
+    "location": "Guinée / Maroc",
+    "whatsapp": "+212 701-986219",
+    "email": "ndinekomara2442@gmail.com",
+    "portfolio": "https://ndinekomara2442-cmd.github.io/komara-agency-portfolio/",
+    "hours": "7j/7 de 8h à 22h (GMT)",
+    "social": {
+      "facebook": "N-dine K fans",
+      "github": "https://github.com/ndinekomara2442-cmd"
+    }
+  },
+  "services": [
+    {"key": "logo", "name": "Logo Pro", "price": "300k-500k GNF", "emoji": "🎨"},
+    {"key": "affiche", "name": "Affiche & Flyer", "price": "300k GNF", "emoji": "🖼️"},
+    {"key": "retouche", "name": "Retouche Photo", "price": "sur discussion", "emoji": "📸"},
+    {"key": "bots", "name": "Bots WhatsApp/Telegram", "price": "sur devis", "emoji": "🤖"},
+    {"key": "branding", "name": "Branding Complet", "price": "sur devis", "emoji": "✨"},
+    {"key": "video", "name": "Montage Vidéo/Reels", "price": "sur devis", "emoji": "🎬"}
+  ],
+  "pricing": {
+    "express_surcharge": "30%",
+    "free_revisions": 2,
+    "extra_revision_cost": "50000 GNF"
+  },
+  "payment_methods": ["Orange Money", "MTN Money", "Virement bancaire", "PayPal"],
+  "languages": ["Français", "Soussou", "Malinké"]
+}
