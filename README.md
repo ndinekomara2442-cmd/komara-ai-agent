@@ -1,96 +1,50 @@
-# 🤖 Komara AI Agent
+# Komara AI Agent 🇬🇳
 
-Agent IA autonome pour **Komara Agency** 🇬🇳 — Gestion client, conseil créatif et automatisation.
+Agent IA de Komara Agency pour la gestion client automatisée.
 
-## ✨ Fonctionnalités
-
-- *Détection d'intention* — Comprend ce que le client demande
-- *Réponses automatiques* — Tarifs, services, délais, paiement
-- *Conseil créatif* — Recommandations personnalisées par projet
-- *Analyse de sentiment* — Détecte l'humeur du client
-- *Suggestions proactives* — Guide le client vers la prochaine étape
-- *Historique de conversation* — Garde le contexte
-- *API externe* — Compatible OpenAI / Gemini (optionnel)
-- *Multilingue* — Français, Soussou, Malinké
-
-## 🚀 Installation
-
-```bash
-git clone https://github.com/ndinekomara2442-cmd/komara-ai-agent.git
-cd komara-ai-agent
-pip install -r requirements.txt
-```
-
-## 💬 Utilisation
-
-### Mode local (sans API)
-
-```python
-from komara_agent import KomaraAgent
-
-agent = KomaraAgent()
-response = agent.generate_response("Salam")
-print(response)
-```
-
-### Mode API (OpenAI)
-
-```python
-from komara_agent import KomaraAgent
-
-agent = KomaraAgent(api_key="sk-votre-cle")
-response = agent.chat_with_api("Je veux un logo pour mon restaurant")
-print(response)
-```
-
-### Test rapide
-
-```bash
-python komara_agent.py
-```
-
-## 🎯 Services gérés
-
-1. 🎨 Logo Pro (300k-500k GNF)
-2. 🖼️ Affiche & Flyer (300k GNF)
-3. 📸 Retouche Photo
-4. 🤖 Bots WhatsApp/Telegram
-5. ✨ Branding Complet
-6. 🎬 Montage Vidéo/Reels
-
-## 📁 Structure
+## Architecture
 
 ```
 komara-ai-agent/
-├── komara_agent.py     # Agent principal
-├── knowledge.json      # Base de connaissances
-├── requirements.txt    # Dépendances
-└── README.md           # Documentation
+├── bots/
+│   ├── telegram/     # Bot Telegram @Komara_Agency_botbot
+│   └── whatsapp/     # Bot WhatsApp Business
+├── templates/        # Templates de design
+├── komara_agent.py   # Agent IA principal
+├── knowledge.json    # Base de connaissances
+└── requirements.txt   # Dépendances Python
 ```
 
-## 🔧 Configuration
+## Bots actifs
 
-Modifie `knowledge.json` pour:
-- Changer les tarifs
-- Ajouter des services
-- Mettre à jour les coordonnées
+### Telegram
+- Bot: @Komara_Agency_botbot
+- Webhook: Actif (réponse instantanée)
+- Fonctionnalités: tarifs, commande, contact, portfolio
 
-## 🌐 Intégration
+### WhatsApp Business
+- Numéro: +212 701-986219
+- Configuré via WhatsApp Business native
 
-Cet agent peut être intégré dans:
-- WhatsApp Business (via Twilio)
-- Telegram Bot
-- Site web (Flask/FastAPI)
-- Application desktop
+## Services & Tarifs
 
-## 📞 Contact
+| Service | Prix | Délai |
+|---------|------|------|
+| Logo pro | 300k-500k GNF | 2-3 jours |
+| Affiche/Flyer | 300k GNF | 1-2 jours |
+| Retouche photo | Sur devis | Variable |
+| Bots | Sur devis | Variable |
+| Branding | Sur devis | Variable |
 
-- WhatsApp: +212 701-986219
-- Email: ndinekomara2442@gmail.com
-- Portfolio: https://ndinekomara2442-cmd.github.io/komara-agency-portfolio/
+Express 24h: +30% | 2 révisions gratuites | Révision sup: 50k GNF
 
----
+## Paiements
+Orange Money, MTN Mobile Money, Virement bancaire, PayPal
 
-**Komara Agency** 🇬🇳 — *Vision. Impact. Excellence.*
+## Contact
+WhatsApp: +212 701-986219
+Telegram: @Komara_Agency_botbot
+GitHub: https://github.com/ndinekomara2442-cmd
 
-Made with ❤️ by Ndine Komara
+## Slogan
+*Vision. Impact. Excellence.*
