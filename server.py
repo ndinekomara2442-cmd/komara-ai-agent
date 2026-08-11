@@ -78,7 +78,7 @@ async def handle_intent(chat_id, intent, client=None):
         "portfolio": "🎨 *Portfolio Komara Agency*\n\nDécouvre nos réalisations!\nDemande-moi des exemples de logos, affiches ou retouches 📸",
         "logo": "🎨 *Logo Pro*\n\nPrix: 300k - 500k GNF\nDélai: 2-3 jours (Express 24h: +30%)\nInclus: 2 révisions gratuites\n\nDis-moi le style que tu veux 👌",
         "affiche": "🖼 *Affiche/Flyer*\n\nPrix: 300k GNF\nDélai: 1-2 jours (Express 24h: +30%)\n\nEnvoie-moi le texte et les infos 🚀",
-        "video": "🎬 *Vidéo IA - MiniMax H3*\n\nGénération de vidéos IA ultra-réalistes:\n4 à 15 secondes, qualité 2K avec audio\n\n💰 Vidéo 6s: 500k GNF\n💰 Vidéo 10s: 800k GNF\n💰 Vidéo 15s: 1M GNF\n⚡ Express 24h: +30%\n\nDécris-moi la vidéo que tu veux 👇",
+        "video": "🎬 *Vidéo IA Premium*\n\nGénération de vidéos IA ultra-réalistes:\n4 à 15 secondes, qualité 2K avec audio\n\n💰 Vidéo 6s: 500k GNF\n💰 Vidéo 10s: 800k GNF\n💰 Vidéo 15s: 1M GNF\n⚡ Express 24h: +30%\n\nDécris-moi la vidéo que tu veux 👇",
         "delai": "⏱ *Délais habituels*\n\nLogo: 2-3 jours\nAffiche: 1-2 jours\nRetouche: 24-48h\nVidéo IA: 24-72h\n\nExpress 24h disponible (+30%) ⚡",
         "merci": "Avec plaisir ! 😊\nKomara Agency 🇬🇳 — Vision. Impact. Excellence.",
         "default": "Je n'ai pas bien compris 🤔\n\nTape un mot-clé:\n1. Logo\n2. Affiche\n3. Retouche photo\n4. Vidéo IA\n5. Bots\n\nOu tape *prix*, *commander*, *contact* 👇",
