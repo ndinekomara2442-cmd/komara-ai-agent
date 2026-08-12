@@ -336,7 +336,7 @@ def smart_respond(text: str) -> str:
         return ("Je n'ai pas bien compris ça 🤔\n\n"
                 "Tape 'prix' pour les tarifs, 'contact' pour nous joindre,\n"
                 "ou 'genere: [description]' pour créer une image IA.")
-    return (f"Je vois que tu parles de "{original[:50]}..." 🤔\n\n"
+    return (f"Je vois que tu parles de \"{original[:50]}\" 🤔\n\n"
             "Je peux t'aider avec: logo, affiche, retouche photo, vidéo IA, branding.\n"
             "Tape 'prix' pour les tarifs ou 'contact' pour nous joindre.\n\n"
             "Qu'est-ce qui t'intéresse ?")
