@@ -23,6 +23,11 @@ HF_TOKEN = os.environ.get("HUGGING_FACE_ACCESS_TOKEN", os.environ.get("HF_TOKEN"
 HF_CHAT_MODEL = "mistralai/Mistral-7B-Instruct-v0.3"
 HF_API_URL = f"https://api-inference.huggingface.co/models/{HF_CHAT_MODEL}"
 
+# Groq — gratuit, ultra-rapide (get key: https://console.groq.com/keys)
+GROQ_TOKEN = os.environ.get("GROQ_API_KEY", "")
+GROQ_MODEL = "llama-3.1-8b-instant"
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+
 KNOWLEDGE = {
     "name": "Komara Agency",
     "slogan": "Vision. Impact. Excellence.",
@@ -113,18 +118,27 @@ async def call_huggingface(user_message: str) -> str | None:
     return None
 
 
-async def call_pollinations_text(user_message: str) -> str | None:
-    """Fallback IA #2: Pollinations.ai text API (gratuit, sans clé)."""
+async def call_groq(user_message: str) -> str | None:
+    """Fallback IA #2: Groq (gratuit, ultra-rapide, nécessite clé)."""
+    if not GROQ_TOKEN:
+        return None
     try:
-        async with httpx.AsyncClient(timeout=25) as client:
+        transport = httpx.AsyncHTTPTransport(retries=2, local_address="0.0.0.0")
+        async with httpx.AsyncClient(timeout=20, transport=transport) as client:
             resp = await client.post(
-                "https://text.pollinations.ai/openai",
+                GROQ_API_URL,
+                headers={
+                    "Authorization": f"Bearer {GROQ_TOKEN}",
+                    "Content-Type": "application/json",
+                },
                 json={
+                    "model": GROQ_MODEL,
                     "messages": [
                         {"role": "system", "content": SYSTEM_PROMPT},
                         {"role": "user", "content": user_message},
                     ],
-                    "model": "openai",
+                    "max_tokens": 250,
+                    "temperature": 0.7,
                 },
             )
             if resp.status_code == 200:
@@ -132,8 +146,10 @@ async def call_pollinations_text(user_message: str) -> str | None:
                 text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
                 if text and len(text.strip()) > 5:
                     return text.strip()
+            else:
+                logger.warning(f"Groq HTTP {resp.status_code}: {resp.text[:200]}")
     except Exception as e:
-        logger.warning(f"Pollinations text API error: {e}")
+        logger.warning(f"Groq API error: {e}")
     return None
 
 
@@ -146,28 +162,68 @@ async def ai_respond(user_message: str, chat_history: list = None) -> str:
     if text:
         return text
 
-    text = await call_pollinations_text(user_message)
+    text = await call_groq(user_message)
     if text:
         return text
 
-    logger.warning("Tous les fournisseurs IA ont échoué, utilisation du fallback local")
-    return local_intent_response(user_message)
+    logger.warning("Tous les fournisseurs IA ont échoué, utilisation du fallback local intelligent")
+    return smart_respond(user_message)
 
 
-def local_intent_response(text: str) -> str:
-    """Fallback: détection d'intent locale avec réponses naturelles."""
+def smart_respond(text: str) -> str:
+    """Moteur de réponse contextuelle intelligent — pas robotique."""
     t = text.lower().strip()
+    original = text.strip()
 
-    if t.startswith("genere:") or t.startswith("crée:") or t.startswith("genere ") or t.startswith("cree "):
+    # === DÉTECTION: Génération d'image ===
+    if any(t.startswith(p) for p in ["genere:", "crée:", "genere ", "cree ", "generez", "dessine"]):
         return "📸 Envoie ta description après 'genere:'\nEx: genere logo luxury africain noir et or"
 
-    if any(w in t for w in ["/start", "bonjour", "salut", "salam", "hello", "bonsoir"]):
-        return ("Hey ! 👋 Bienvenue chez Komara Agency 🇬🇳\n\n"
+    # === DÉTECTION: Accueil ===
+    greetings = ["/start", "bonjour", "salut", "salam", "hello", "bonsoir", "coucou", "hey", "cc"]
+    if any(t == g or t.startswith(g) for g in greetings) or t in ["/start"]:
+        # Réponse dynamique selon l'heure
+        hour = __import__("datetime").datetime.utcnow().hour
+        if 5 <= hour < 12:
+            phase = "Bonjour"
+        elif 12 <= hour < 18:
+            phase = "Bon après-midi"
+        elif 18 <= hour < 22:
+            phase = "Bonsoir"
+        else:
+            phase = "Salut"
+        return (f"{phase} ! 👋 Bienvenue chez Komara Agency 🇬🇳\n\n"
                 "On fait du logo, des affiches, retouche photo, branding et vidéos IA.\n"
-                "Tu cherches quoi au juste ?")
+                "Dis-moi ce que tu cherches, je te guide.")
 
-    if any(w in t for w in ["prix", "tarif", "combien", "coût", "cout", "cher"]):
-        return ("💰 Nos tarifs:\n\n"
+    # === DÉTECTION: Question d'identité ===
+    identity_words = ["tu es qui", "qui es-tu", "qui es tu", "c'est qui", "qui êtes vous",
+                      "comment tu t'appelles", "ton nom", "présente", "presente", "que fais",
+                      "que faites", "vos services", "tu fais quoi"]
+    if any(w in t for w in identity_words):
+        return ("Je suis l'assistant de Komara Agency 🇬🇳\n"
+                "On crée des logos, affiches, retouches photo, branding et vidéos IA.\n"
+                "Tu cherches quelque chose en particulier ?")
+
+    # === DÉTECTION: Tarifs ===
+    price_words = ["prix", "tarif", "combien", "coût", "cout", "cher", "coute", "coûte", "gratuit"]
+    if any(w in t for w in price_words):
+        # Détecter si un service spécifique est mentionné
+        if "logo" in t:
+            return ("Le logo Pro c'est 300k à 500k GNF selon la complexité.\n"
+                    "2 révisions incluses, livré en 2-3 jours.\n"
+                    "Tu as une idée du style que tu veux ?")
+        if any(w in t for w in ["affiche", "flyer", "poster"]):
+            return ("L'affiche ou flyer c'est 300k GNF, livré en 1-2 jours.\n"
+                    "Tu as le texte et les infos prêtes ?")
+        if any(w in t for w in ["retouche", "photo"]):
+            return ("La retouche photo, le prix dépend du travail.\n"
+                    "Dis-moi ce que tu veux changer, je te donne un prix juste.")
+        if any(w in t for w in ["vidéo", "video", "reel"]):
+            return ("La vidéo IA c'est sur devis — ça dépend de la durée et la complexité.\n"
+                    "Décris-moi ton idée, je te chiffrage ça.")
+        # Prix général
+        return ("💰 Voici nos tarifs:\n\n"
                 "🎨 Logo: 300k-500k GNF (2-3j)\n"
                 "🖼️ Affiche: 300k GNF (1-2j)\n"
                 "📸 Retouche: sur discussion\n"
@@ -176,59 +232,113 @@ def local_intent_response(text: str) -> str:
                 "⚡ Express 24h: +30% | 2 révisions gratuites\n\n"
                 "Quel service t'intéresse ?")
 
-    if any(w in t for w in ["commander", "commande", "acheter", "je veux"]):
-        return ("Parfait ! 🛒 Pour te préparer un devis:\n\n"
-                "1. Quel service? (logo, affiche, retouche...)\n"
+    # === DÉTECTION: Commander ===
+    order_words = ["commander", "commande", "acheter", "je veux", "je cherche", "j'ai besoin",
+                   "je voudrais", "je souhaite", "je cherche un", "je cherche une"]
+    if any(w in t for w in order_words):
+        # Extraire ce que le client cherche
+        service = ""
+        for s in ["logo", "affiche", "flyer", "poster", "retouche", "photo", "vidéo", "video",
+                   "reel", "branding", "bot", "site", "website", "carte", "menu"]:
+            if s in t:
+                service = s
+                break
+        if service:
+            return (f"Super, je te prépare ça ! 🛒\n\n"
+                    f"Pour le {service}, dis-moi:\n"
+                    f"1. Ton style ou idée\n"
+                    f"2. Ton délai (normal ou express 24h ?)\n"
+                    f"3. Toutes les infos utiles\n\n"
+                    f"Je te donne un prix précis après ça 👇")
+        return ("Super ! 🛒 Pour te préparer un devis précis, dis-moi:\n\n"
+                "1. Quel service? (logo, affiche, retouche, vidéo...)\n"
                 "2. Tes idées ou références\n"
                 "3. Délai souhaité (normal ou express?)\n\n"
-                "Dis-moi tout 👇")
+                "Je t'écoute 👇")
 
-    if any(w in t for w in ["contact", "numero", "numéro", "whatsapp", "joindre"]):
-        return (f"📞 Contact:\n\n"
+    # === DÉTECTION: Contact ===
+    contact_words = ["contact", "numero", "numéro", "whatsapp", "joindre", "appeler",
+                     "téléphone", "telephone", "email", "mail", "où vous trouver", "ou vous trouver"]
+    if any(w in t for w in contact_words):
+        return (f"📞 Voici comment nous joindre:\n\n"
                 f"WhatsApp: {KNOWLEDGE['whatsapp']}\n"
                 f"Email: {KNOWLEDGE['email']}\n"
                 f"Horaires: {KNOWLEDGE['hours']}\n\n"
                 f"Réponse rapide garantie 🚀")
 
+    # === DÉTECTION: Services spécifiques ===
     if "logo" in t:
-        return ("🎨 Logo Pro — 300k à 500k GNF\n\n"
-                "Inclus: 2 révisions, délai 2-3 jours\n"
-                "Tu as une idée du style? moderne, minimaliste, luxury?")
+        # Extraire le style mentionné
+        styles = {"moderne": "moderne", "minimaliste": "minimaliste", "luxury": "luxury",
+                  "classique": "classique", "africain": "africain", "3d": "3D", "animé": "animé"}
+        found_styles = [s for w, s in styles.items() if w in t]
+        if found_styles:
+            return (f"Logo {', '.join(found_styles)} — bonne choix ! 🎨\n\n"
+                    f"Prix: 300k-500k GNF selon la complexité\n"
+                    f"Délai: 2-3 jours, 2 révisions incluses\n\n"
+                    f"Tu as déjà une idée précise ou tu veux qu'on en discute ?")
+        return ("🎨 Logo Pro — 300k à 500k GNF\n"
+                "2 révisions incluses, livré en 2-3 jours.\n"
+                "Tu as une idée du style? moderne, minimaliste, luxury, africain?")
 
     if any(w in t for w in ["affiche", "flyer", "poster"]):
-        return ("🖼️ Affiche & Flyer — 300k GNF\n\n"
-                "Délai: 1-2 jours\n"
-                "Envoie le texte et les infos à inclure 🚀")
+        return ("🖼️ Affiche & Flyer — 300k GNF, livré en 1-2 jours.\n"
+                "Envoie-moi le texte, les infos et le style que tu veux 🚀")
 
-    if any(w in t for w in ["retouche", "photo", "edit", "modifier"]):
-        return ("📸 Retouche Photo\n\n"
-                "Envoie ta photo et dis-moi ce que tu veux changer:\n"
-                "Fond, lumière, couleurs, supprimer/ajouter des éléments\n\n"
-                "Prix sur discussion selon le travail 👇")
+    if any(w in t for w in ["retouche", "photo", "edit", "modifier", "restaurer", "améliorer", "ameliorer"]):
+        return ("📸 Envoie ta photo et dis-moi ce que tu veux changer:\n"
+                "Fond, lumière, couleurs, supprimer/ajouter un élément, restauration...\n\n"
+                "Je te donne un prix selon le travail 👇")
 
-    if any(w in t for w in ["vidéo", "video", "reel", "reels", "montage"]):
-        return ("🎬 Vidéo IA & Montage\n\n"
-                "Vidéos IA ultra-réalistes (4-15s, 2K) et reels\n\n"
-                "Décris-moi ce que tu imagines 👇")
+    if any(w in t for w in ["vidéo", "video", "reel", "reels", "montage", "tiktok"]):
+        return ("🎬 Vidéo IA & Montage\n"
+                "Vidéos ultra-réalistes (4-15s, 2K) et reels pour réseaux sociaux.\n\n"
+                "Décris-moi ton idée, je te dis ce qui est possible 👇")
 
-    if any(w in t for w in ["délai", "delai", "temps", "rapidement"]):
-        return ("⏱️ Délais:\n\n"
+    if any(w in t for w in ["branding", "identité", "identite", "charte", "brand"]):
+        return ("✨ Branding complet — identité visuelle de A à Z.\n"
+                "Logo, couleurs, typographie, cartes, templates...\n"
+                "Sur devis selon le scope. Tu veux qu'on en discute ?")
+
+    if any(w in t for w in ["bot", "robot", "automatisation", "automat"]):
+        return ("🤖 On crée des bots WhatsApp et Telegram sur mesure.\n"
+                "Sur devis selon les fonctionnalités.\n"
+                "Tu veux un bot pour quoi faire ?")
+
+    # === DÉTECTION: Délais ===
+    delay_words = ["délai", "delai", "combien de temps", "rapidement", "quand", "urgence"]
+    if any(w in t for w in delay_words):
+        return ("⏱️ Délais:\n"
                 "Logo: 2-3j | Affiche: 1-2j | Retouche: 24-48h | Vidéo: 24-72h\n\n"
-                "⚡ Express 24h: +30%")
+                "⚡ Express 24h: +30% — t'es pressé ?")
 
-    if any(w in t for w in ["merci", "thanks", "thank"]):
-        return "Avec plaisir ! 😊 Komara Agency 🇬🇳 — Vision. Impact. Excellence."
+    # === DÉTECTION: Gratitude ===
+    if any(w in t for w in ["merci", "thanks", "thank", "cool", "super", "génial", "genial", "nickel", "parfait"]):
+        return "Avec plaisir ! 😊 Komara Agency 🇬🇳 — Vision. Impact. Excellence.\nTu as besoin d'autre chose ?"
 
-    if any(w in t for w in ["portfolio", "travaux", "exemple", "réalisation"]):
-        return (f"🎨 Voir nos réalisations:\n{KNOWLEDGE['portfolio']}\n\n"
+    # === DÉTECTION: Portfolio ===
+    if any(w in t for w in ["portfolio", "travaux", "exemple", "réalisation", "realisation", "voir", "montrer"]):
+        return (f"🎨 Découvre nos réalisations:\n{KNOWLEDGE['portfolio']}\n\n"
                 "Tu veux voir un style en particulier ?")
 
-    return ("Je n'ai pas bien compris 🤔\n\n"
-            "Tu peux demander:\n"
-            "• 'prix' — voir les tarifs\n"
-            "• Commander un service\n"
-            "• 'genere: [description]' — générer une image IA\n"
-            "• 'contact' — nous joindre\n\n"
+    # === DÉTECTION: Questions générales (qui, quoi, comment, pourquoi) ===
+    question_words = ["qui", "quoi", "comment", "pourquoi", "où", "ou", "est-ce", "c'est quoi", "que"]
+    if any(t.startswith(w) or f" {w} " in f" {t} " for w in question_words):
+        # Question générale — rediriger intelligemment
+        return ("Bonne question ! 🤔\n\n"
+                "Je peux t'aider avec nos services: logo, affiche, retouche, vidéo, branding.\n"
+                "Tu peux aussi taper 'prix' pour les tarifs ou 'contact' pour nous joindre.\n\n"
+                "Dis-moi ce que tu cherches exactement 👇")
+
+    # === FALLBACK: Message non compris ===
+    # Analyser la longueur pour adapter la réponse
+    if len(t) < 10:
+        return ("Je n'ai pas bien compris ça 🤔\n\n"
+                "Tape 'prix' pour les tarifs, 'contact' pour nous joindre,\n"
+                "ou 'genere: [description]' pour créer une image IA.")
+    return (f"Je vois que tu parles de "{original[:50]}..." 🤔\n\n"
+            "Je peux t'aider avec: logo, affiche, retouche photo, vidéo IA, branding.\n"
+            "Tape 'prix' pour les tarifs ou 'contact' pour nous joindre.\n\n"
             "Qu'est-ce qui t'intéresse ?")
 
 
