@@ -68,26 +68,29 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 # ============ IA: RÉPONSE CONVERSATIONNELLE ============
 
-async def ai_respond(user_message: str, chat_history: list = None) -> str:
-    """
-    Utilise Hugging Face (Mistral-7B) pour générer une réponse naturelle.
-    Fallback sur détection locale si HF indisponible.
-    """
-    if HF_TOKEN:
+async def call_huggingface(user_message: str) -> str | None:
+    """Appelle Mistral-7B via Hugging Face, avec retry (résilient aux blips DNS/réseau)."""
+    if not HF_TOKEN:
+        return None
+
+    conversation = f"<s>[INST] {SYSTEM_PROMPT}\n\nMessage du client: {user_message} [/INST]"
+    headers = {"Authorization": f"Bearer {HF_TOKEN}", "Content-Type": "application/json"}
+    payload = {
+        "inputs": conversation,
+        "parameters": {
+            "max_new_tokens": 250,
+            "temperature": 0.7,
+            "top_p": 0.9,
+            "do_sample": True,
+            "return_full_text": False,
+        },
+    }
+
+    for attempt in range(3):
         try:
-            conversation = f"<s>[INST] {SYSTEM_PROMPT}\n\nMessage du client: {user_message} [/INST]"
-            headers = {"Authorization": f"Bearer {HF_TOKEN}", "Content-Type": "application/json"}
-            payload = {
-                "inputs": conversation,
-                "parameters": {
-                    "max_new_tokens": 250,
-                    "temperature": 0.7,
-                    "top_p": 0.9,
-                    "do_sample": True,
-                    "return_full_text": False,
-                },
-            }
-            async with httpx.AsyncClient(timeout=30) as client:
+            # transport avec retries intégrés + force IPv4 (évite les blips DNS/IPv6 sur Railway)
+            transport = httpx.AsyncHTTPTransport(retries=2, local_address="0.0.0.0")
+            async with httpx.AsyncClient(timeout=30, transport=transport) as client:
                 resp = await client.post(HF_API_URL, headers=headers, json=payload)
                 if resp.status_code == 200:
                     data = resp.json()
@@ -95,10 +98,59 @@ async def ai_respond(user_message: str, chat_history: list = None) -> str:
                         text = data[0].get("generated_text", "")
                         if text and len(text.strip()) > 5:
                             return text.strip()
+                    return None
                 elif resp.status_code == 503:
-                    logger.warning("HF model loading, using fallback")
+                    logger.warning(f"HF model loading (tentative {attempt+1}/3)")
+                    await asyncio.sleep(2)
+                    continue
+                else:
+                    logger.warning(f"HF HTTP {resp.status_code}: {resp.text[:200]}")
+                    return None
         except Exception as e:
-            logger.warning(f"HF API error: {e}, using fallback")
+            logger.warning(f"HF API error (tentative {attempt+1}/3): {e}")
+            await asyncio.sleep(1)
+            continue
+    return None
+
+
+async def call_pollinations_text(user_message: str) -> str | None:
+    """Fallback IA #2: Pollinations.ai text API (gratuit, sans clé)."""
+    try:
+        async with httpx.AsyncClient(timeout=25) as client:
+            resp = await client.post(
+                "https://text.pollinations.ai/openai",
+                json={
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": user_message},
+                    ],
+                    "model": "openai",
+                },
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                if text and len(text.strip()) > 5:
+                    return text.strip()
+    except Exception as e:
+        logger.warning(f"Pollinations text API error: {e}")
+    return None
+
+
+async def ai_respond(user_message: str, chat_history: list = None) -> str:
+    """
+    Essaie Hugging Face (Mistral-7B) en premier, puis Pollinations.ai text,
+    puis fallback local si les deux échouent.
+    """
+    text = await call_huggingface(user_message)
+    if text:
+        return text
+
+    text = await call_pollinations_text(user_message)
+    if text:
+        return text
+
+    logger.warning("Tous les fournisseurs IA ont échoué, utilisation du fallback local")
     return local_intent_response(user_message)
 
 
