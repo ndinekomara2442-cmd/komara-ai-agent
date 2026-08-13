@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Komara AGENCY 🇬🇳 | Agents IA & Chatbots 24/7</title>
+  <meta name="description" content="Komara Agency — Chatbots IA, Agents intelligents et Création visuelle premium pour les entreprises guinéennes.">
+  <style>
+    * { margin:0; padding:0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { background:#0A0A0A; color:#fff; overflow-x:hidden; }
+    a { color:#D4AF37; text-decoration:none; }
+
+    /* Header */
+    header { display:flex; justify-content:space-between; align-items:center; padding:20px 8%; background:#0A0A0A; position:sticky; top:0; z-index:100; border-bottom:1px solid #1a1a1a; backdrop-filter:blur(10px); }
+    header h2 { color:#D4AF37; font-size:24px; letter-spacing:1px; }
+    nav a { margin-left:20px; font-weight:500; color:#ccc; transition:color 0.3s; }
+    nav a:hover { color:#D4AF37; }
+
+    /* Hero */
+    .hero { text-align:center; padding:120px 20px; background: linear-gradient(135deg, #0A0A0A 0%, #1a1510 50%, #0A0A0A 100%); position:relative; }
+    .hero::before { content:''; position:absolute; top:0; left:0; right:0; bottom:0; background:radial-gradient(ellipse at center, rgba(212,175,55,0.08) 0%, transparent 70%); }
+    .hero h1 { font-size: 52px; margin-bottom:20px; color:#fff; line-height:1.3; }
+    .hero h1 span { color:#D4AF37; }
+    .hero p { font-size:20px; margin-bottom:35px; color:#aaa; position:relative; }
+    .btn { background:#D4AF37; color:#0A0A0A; padding:16px 40px; border-radius:10px; font-weight:bold; display:inline-block; transition:0.3s; position:relative; letter-spacing:0.5px; }
+    .btn:hover { transform:scale(1.05); box-shadow:0 10px 30px rgba(212,175,55,0.3); }
+    .btn-outline { background:transparent; color:#D4AF37; border:2px solid #D4AF37; margin-left:15px; }
+    .btn-outline:hover { background:#D4AF37; color:#0A0A0A; }
+
+    /* Sections */
+    .section { padding:80px 8%; }
+    .section h2 { text-align:center; font-size:36px; margin-bottom:15px; color:#D4AF37; }
+    .section .subtitle { text-align:center; color:#888; margin-bottom:50px; font-size:16px; }
+
+    /* Services */
+    .services { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:25px; }
+    .card { background:#111; padding:40px 30px; border-radius:15px; border:1px solid #1a1a1a; transition:0.3s; }
+    .card:hover { border-color:#D4AF37; transform:translateY(-5px); box-shadow:0 10px 40px rgba(212,175,55,0.1); }
+    .card h3 { font-size:21px; margin-bottom:15px; color:#fff; }
+    .card p { color:#999; line-height:1.6; }
+    .card .price { color:#D4AF37; font-weight:bold; margin-top:15px; display:block; }
+
+    /* Event / CTA */
+    .event { background: linear-gradient(135deg, #111 0%, #1a1510 100%); border:2px solid #D4AF37; border-radius:20px; padding:50px; text-align:center; max-width:700px; margin:0 auto; }
+    .event .badge { background:#D4AF37; color:#0A0A0A; padding:5px 15px; border-radius:20px; font-weight:bold; font-size:14px; display:inline-block; margin-bottom:20px; }
+    .event .date { font-size:20px; color:#D4AF37; margin:15px 0; }
+    .event h3 { font-size:28px; margin-bottom:15px; }
+    .event p { color:#aaa; margin-bottom:25px; line-height:1.6; }
+
+    /* Stats */
+    .stats { display:flex; justify-content:center; gap:60px; flex-wrap:wrap; margin-bottom:60px; }
+    .stat { text-align:center; }
+    .stat .num { font-size:42px; color:#D4AF37; font-weight:bold; }
+    .stat .label { color:#888; font-size:14px; margin-top:5px; }
+
+    /* Process */
+    .process { display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:25px; }
+    .step { text-align:center; padding:30px; }
+    .step .icon { font-size:40px; margin-bottom:15px; }
+    .step h4 { font-size:18px; color:#fff; margin-bottom:10px; }
+    .step p { color:#888; font-size:14px; line-height:1.5; }
+
+    /* Contact */
+    .contact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:25px; max-width:800px; margin:0 auto; }
+    .contact-item { background:#111; padding:30px; border-radius:12px; border:1px solid #1a1a1a; text-align:center; transition:0.3s; }
+    .contact-item:hover { border-color:#D4AF37; }
+    .contact-item .icon { font-size:30px; margin-bottom:10px; }
+    .contact-item h4 { color:#D4AF37; margin-bottom:8px; }
+    .contact-item p { color:#999; }
+
+    /* Footer */
+    footer { text-align:center; padding:40px 8%; background:#080808; border-top:1px solid #1a1a1a; }
+    footer p { color:#666; font-size:14px; }
+    footer .gold { color:#D4AF37; }
+
+    /* Mobile */
+    @media (max-width:768px) {
+      header { flex-direction:column; gap:15px; }
+      nav a { margin:0 10px; font-size:14px; }
+      .hero h1 { font-size:32px; }
+      .hero p { font-size:16px; }
+      .btn-outline { margin:10px 0 0 0; }
+      .stats { gap:30px; }
+      .stat .num { font-size:30px; }
+      .section { padding:60px 5%; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h2>Komara AGENCY 🇬🇳</h2>
+  <nav>
+    <a href="#services">Services</a>
+    <a href="#process">Comment ça marche</a>
+    <a href="https://t.me/ndinekomara_Bot">Tester le Bot</a>
+    <a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>L'IA qui fait vendre votre business <span>24/7</span></h1>
+  <p>Chatbots, Agents IA et Création visuelle premium pour les entreprises guinéennes</p>
+  <a href="https://t.me/ndinekomara_Bot" class="btn">Parler à KomaraBot</a>
+  <a href="#services" class="btn btn-outline">Voir nos services</a>
+</section>
+
+<section class="section" id="services">
+  <h2>Nos Solutions IA</h2>
+  <p class="subtitle">Des outils intelligents pour automatiser et faire grandir votre business</p>
+  <div class="services">
+    <div class="card">
+      <h3>🤖 Chatbot WhatsApp</h3>
+      <p>Réponses automatiques 24/7. Prise de commande, FAQ, SAV. Intégration Orange Money &amp; Mobile Money.</p>
+      <span class="price">Sur devis</span>
+    </div>
+    <div class="card">
+      <h3>⚡ Agent IA Telegram</h3>
+      <p>Votre commercial digital. Il prospecte, répond et fidélise vos clients à votre place, sans pauses.</p>
+      <span class="price">Sur devis</span>
+    </div>
+    <div class="card">
+      <h3>🎨 Création Visuelle IA</h3>
+      <p>Logos, affiches, retouche photo et vidéos IA ultra-réalistes. Style luxury africain premium.</p>
+      <span class="price">300k - 500k GNF</span>
+    </div>
+    <div class="card">
+      <h3>🎬 Vidéos IA &amp; Reels</h3>
+      <p>Vidéos promotionnelles 4-15s en 2K avec avatars IA. Parfait pour réseaux sociaux et pubs.</p>
+      <span class="price">Sur devis</span>
+    </div>
+    <div class="card">
+      <h3>📱 Branding &amp; Identité</h3>
+      <p>Identité visuelle complète: logo, couleurs, typographie, cartes de visite, templates réseaux sociaux.</p>
+      <span class="price">Sur devis</span>
+    </div>
+    <div class="card">
+      <h3>🌐 Sites Web Pro</h3>
+      <p>Sites vitrines et e-commerce responsive, optimisés SEO, déployés rapidement sur votre domaine.</p>
+      <span class="price">Sur devis</span>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="background:#080808;">
+  <div class="stats">
+    <div class="stat">
+      <div class="num">24/7</div>
+      <div class="label">Disponibilité IA</div>
+    </div>
+    <div class="stat">
+      <div class="num">100%</div>
+      <div class="label">Automatisation</div>
+    </div>
+    <div class="stat">
+      <div class="num">&lt;3s</div>
+      <div class="label">Temps de réponse</div>
+    </div>
+    <div class="stat">
+      <div class="num">🇬🇳</div>
+      <div class="label">Made in Guinea</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="process">
+  <h2>Comment ça marche</h2>
+  <p class="subtitle">De l'idée au déploiement en 4 étapes simples</p>
+  <div class="process">
+    <div class="step">
+      <div class="icon">💬</div>
+      <h4>1. Discussion</h4>
+      <p>On échange sur votre besoin: objectifs, plateforme, budget, délais.</p>
+    </div>
+    <div class="step">
+      <div class="icon">🎨</div>
+      <h4>2. Conception</h4>
+      <p>Je crée et personnalise votre bot ou visuel selon votre identité de marque.</p>
+    </div>
+    <div class="step">
+      <div class="icon">⚙️</div>
+      <h4>3. Déploiement</h4>
+      <p>Mise en ligne sur WhatsApp, Telegram ou web. Tests et ajustements.</p>
+    </div>
+    <div class="step">
+      <div class="icon">🚀</div>
+      <h4>4. Lancement</h4>
+      <p>Votre IA travaille 24/7. Support et maintenance inclus.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="event">
+    <span class="badge">Offre de lancement</span>
+    <h3>Démarrez avec KomaraBot</h3>
+    <p>Testez gratuitement notre agent IA sur Telegram. Posez vos questions, demandez un devis, générez des images.</p>
+    <a href="https://t.me/ndinekomara_Bot" class="btn">Parler à KomaraBot maintenant</a>
+  </div>
+</section>
+
+<section class="section" id="contact">
+  <h2>Contact</h2>
+  <p class="subtitle">Parlons de votre projet</p>
+  <div class="contact-grid">
+    <div class="contact-item">
+      <div class="icon">📱</div>
+      <h4>WhatsApp</h4>
+      <p>+224 622 00 00 00</p>
+    </div>
+    <div class="contact-item">
+      <div class="icon">✈️</div>
+      <h4>Telegram</h4>
+      <p>@ndinekomara_Bot</p>
+    </div>
+    <div class="contact-item">
+      <div class="icon">📧</div>
+      <h4>Email</h4>
+      <p>contact@komara.agency</p>
+    </div>
+    <div class="contact-item">
+      <div class="icon">🌐</div>
+      <h4>Site Web</h4>
+      <p>ndinekomara2442-cmd.github.io/ndinekomara-site</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p><span class="gold">Komara AGENCY 🇬🇳</span> — Vision. Impact. Excellence.</p>
+  <p style="margin-top:8px;">Conçu avec passion à Conakry, Guinée</p>
+</footer>
+
+</body>
+</html>
