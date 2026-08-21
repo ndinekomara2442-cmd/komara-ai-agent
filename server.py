@@ -532,6 +532,38 @@ async def debug_ai():
     return result
 
 
+@app.get("/debug/models")
+async def debug_models():
+    """Liste les modèles réellement disponibles avec les clés configurées."""
+    out = {}
+    if GEMINI_API_KEY:
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                resp = await client.get(f"{GEMINI_API_BASE}/models?key={GEMINI_API_KEY}")
+                if resp.status_code == 200:
+                    data = resp.json()
+                    models = [m["name"] for m in data.get("models", [])
+                              if "generateContent" in m.get("supportedGenerationMethods", [])]
+                    out["gemini_models"] = models
+                else:
+                    out["gemini_models_error"] = resp.text[:300]
+        except Exception as e:
+            out["gemini_models_error"] = str(e)
+    if GROQ_TOKEN:
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                resp = await client.get("https://api.groq.com/openai/v1/models",
+                                          headers={"Authorization": f"Bearer {GROQ_TOKEN}"})
+                if resp.status_code == 200:
+                    data = resp.json()
+                    out["groq_models"] = [m["id"] for m in data.get("data", [])]
+                else:
+                    out["groq_models_error"] = resp.text[:300]
+        except Exception as e:
+            out["groq_models_error"] = str(e)
+    return out
+
+
 @app.get("/health")
 async def health():
     return {"status": "healthy", "ai_enabled": bool(GEMINI_API_KEY or GROQ_TOKEN or HF_TOKEN), "image_gen_enabled": True}
