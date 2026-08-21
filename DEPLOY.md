@@ -9,7 +9,8 @@
 4. Railway détecte le Dockerfile automatiquement
 5. Ajoute les variables d'environnement:
    - TELEGRAM_BOT_TOKEN_2
-   - HUGGING_FACE_ACCESS_TOKEN
+   - GEMINI_API_KEY (PRIORITÉ — get it: https://aistudio.google.com/apikey)
+   - GROQ_API_KEY (OPTIONNEL — get it: https://console.groq.com/keys)
    - SERVER_URL=https://komara-ai-agent.up.railway.app
 6. Deploy — ton agent est en ligne!
 
