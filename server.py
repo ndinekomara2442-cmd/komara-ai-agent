@@ -666,7 +666,6 @@ async def telegram_webhook(request: Request):
                     "chat_id": chat_id,
                     "text": response,
                     "parse_mode": "HTML",
-                    "reply_markup": INLINE_KEYBOARD,
                 })
                 return {"ok": True}
 
