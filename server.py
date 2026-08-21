@@ -28,6 +28,16 @@ GROQ_TOKEN = os.environ.get("GROQ_API_KEY", "")
 GROQ_MODEL = "llama-3.1-8b-instant"
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
+# Gemini — Google AI (get key: https://aistudio.google.com/apikey)
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+# Liste de modèles Gemini en cascade (du meilleur au plus stable)
+GEMINI_MODELS = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+]
+GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta"
+
 KNOWLEDGE = {
     "name": "Komara Agency",
     "slogan": "Vision. Impact. Excellence.",
@@ -72,6 +82,55 @@ logger = logging.getLogger("komara")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 # ============ IA: RÉPONSE CONVERSATIONNELLE ============
+
+async def call_gemini(user_message: str, chat_history: list = None) -> str | None:
+    """IA principale: Gemini (Google AI) avec cascade de modèles."""
+    if not GEMINI_API_KEY:
+        return None
+
+    # Construire l'historique de conversation pour Gemini
+    contents = []
+    if chat_history:
+        for msg in chat_history[-5:]:  # Garder les 5 derniers échanges
+            contents.append({"role": "user", "parts": [{"text": msg.get("user", "")}]})
+            contents.append({"role": "model", "parts": [{"text": msg.get("bot", "")}]})
+    contents.append({"role": "user", "parts": [{"text": user_message}]})
+
+    for model_name in GEMINI_MODELS:
+        url = f"{GEMINI_API_BASE}/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+        payload = {
+            "contents": contents,
+            "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+            "generationConfig": {
+                "maxOutputTokens": 300,
+                "temperature": 0.7,
+                "topP": 0.9,
+            },
+        }
+
+        try:
+            transport = httpx.AsyncHTTPTransport(retries=2, local_address="0.0.0.0")
+            async with httpx.AsyncClient(timeout=25, transport=transport) as client:
+                resp = await client.post(url, json=payload)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        parts = candidates[0].get("content", {}).get("parts", [])
+                        for part in parts:
+                            text = part.get("text", "").strip()
+                            # Ignorer les parts de "thinking"
+                            if part.get("thought"):
+                                continue
+                            if text and len(text) > 5:
+                                return text
+                else:
+                    logger.warning(f"Gemini {model_name} HTTP {resp.status_code}: {resp.text[:200]}")
+        except Exception as e:
+            logger.warning(f"Gemini {model_name} error: {e}")
+
+    return None
+
 
 async def call_huggingface(user_message: str) -> str | None:
     """Appelle Mistral-7B via Hugging Face, avec retry (résilient aux blips DNS/réseau)."""
@@ -155,14 +214,20 @@ async def call_groq(user_message: str) -> str | None:
 
 async def ai_respond(user_message: str, chat_history: list = None) -> str:
     """
-    Essaie Hugging Face (Mistral-7B) en premier, puis Pollinations.ai text,
-    puis fallback local si les deux échouent.
+    Cascade IA: Gemini (Google) -> Groq -> Hugging Face -> fallback local.
     """
-    text = await call_huggingface(user_message)
+    # 1. Gemini (priorité — le plus stable avec clé API)
+    text = await call_gemini(user_message, chat_history)
     if text:
         return text
 
+    # 2. Groq (ultra-rapide, gratuit)
     text = await call_groq(user_message)
+    if text:
+        return text
+
+    # 3. Hugging Face (gratuit, peut être lent)
+    text = await call_huggingface(user_message)
     if text:
         return text
 
@@ -413,13 +478,13 @@ async def root():
         "status": "online",
         "bot": "Komara Agency 🇬🇳",
         "version": "3.0",
-        "ai": "Mistral-7B" if HF_TOKEN else "local-intent",
+        "ai": "Gemini" if GEMINI_API_KEY else ("Groq" if GROQ_TOKEN else ("Mistral-7B" if HF_TOKEN else "local-intent")),
         "image_gen": "Pollinations.ai",
     }
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "ai_enabled": bool(HF_TOKEN), "image_gen_enabled": True}
+    return {"status": "healthy", "ai_enabled": bool(GEMINI_API_KEY or GROQ_TOKEN or HF_TOKEN), "image_gen_enabled": True}
 
 @app.post(f"/telegram/{BOT_TOKEN}")
 async def telegram_webhook(request: Request):
