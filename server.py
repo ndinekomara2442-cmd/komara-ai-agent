@@ -25,16 +25,17 @@ HF_API_URL = f"https://api-inference.huggingface.co/models/{HF_CHAT_MODEL}"
 
 # Groq — gratuit, ultra-rapide (get key: https://console.groq.com/keys)
 GROQ_TOKEN = os.environ.get("GROQ_API_KEY", "")
-GROQ_MODEL = "llama-3.1-8b-instant"
+GROQ_MODEL = "openai/gpt-oss-20b"
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 # Gemini — Google AI (get key: https://aistudio.google.com/apikey)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 # Liste de modèles Gemini en cascade (du meilleur au plus stable)
 GEMINI_MODELS = [
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
+    "gemini-3.6-flash",
+    "gemini-flash-latest",
+    "gemini-2.5-flash-lite",
+    "gemini-pro-latest",
 ]
 GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta"
 
@@ -105,6 +106,7 @@ async def call_gemini(user_message: str, chat_history: list = None) -> str | Non
                 "maxOutputTokens": 300,
                 "temperature": 0.7,
                 "topP": 0.9,
+                "thinkingConfig": {"thinkingBudget": 0},
             },
         }
 
