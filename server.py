@@ -471,6 +471,8 @@ INLINE_KEYBOARD = {
 
 app = FastAPI(title="Komara AI Agent", version="3.0")
 chat_contexts: dict = {}
+processed_updates: set = set()  # anti-doublon Telegram (retry webhook)
+MAX_PROCESSED = 2000
 
 @app.get("/")
 async def root():
@@ -482,6 +484,54 @@ async def root():
         "image_gen": "Pollinations.ai",
     }
 
+@app.get("/debug/ai")
+async def debug_ai():
+    """Diagnostic temporaire: teste chaque fournisseur IA et renvoie le résultat/erreur."""
+    result = {}
+
+    # Test Gemini (capture l'erreur réelle sans passer par le warning silencieux)
+    if GEMINI_API_KEY:
+        gemini_errors = []
+        gemini_success = None
+        for model_name in GEMINI_MODELS:
+            url = f"{GEMINI_API_BASE}/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+            payload = {
+                "contents": [{"role": "user", "parts": [{"text": "dis bonjour en un mot"}]}],
+                "generationConfig": {"maxOutputTokens": 50},
+            }
+            try:
+                async with httpx.AsyncClient(timeout=20) as client:
+                    resp = await client.post(url, json=payload)
+                    if resp.status_code == 200:
+                        gemini_success = model_name
+                        break
+                    else:
+                        gemini_errors.append(f"{model_name}: HTTP {resp.status_code} - {resp.text[:200]}")
+            except Exception as e:
+                gemini_errors.append(f"{model_name}: {type(e).__name__}: {e}")
+        result["gemini"] = {"key_set": True, "success_model": gemini_success, "errors": gemini_errors}
+    else:
+        result["gemini"] = {"key_set": False}
+
+    # Test Groq
+    if GROQ_TOKEN:
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                resp = await client.post(
+                    GROQ_API_URL,
+                    headers={"Authorization": f"Bearer {GROQ_TOKEN}", "Content-Type": "application/json"},
+                    json={"model": GROQ_MODEL, "messages": [{"role": "user", "content": "dis bonjour en un mot"}], "max_tokens": 20},
+                )
+                result["groq"] = {"key_set": True, "status": resp.status_code, "body": resp.text[:200]}
+        except Exception as e:
+            result["groq"] = {"key_set": True, "error": f"{type(e).__name__}: {e}"}
+    else:
+        result["groq"] = {"key_set": False}
+
+    result["hf"] = {"key_set": bool(HF_TOKEN)}
+    return result
+
+
 @app.get("/health")
 async def health():
     return {"status": "healthy", "ai_enabled": bool(GEMINI_API_KEY or GROQ_TOKEN or HF_TOKEN), "image_gen_enabled": True}
@@ -491,6 +541,19 @@ async def telegram_webhook(request: Request):
     """Webhook Telegram — IA conversationnelle + génération d'images"""
     try:
         update = await request.json()
+
+        # Anti-doublon: Telegram peut renvoyer le même update si la réponse est lente
+        update_id = update.get("update_id")
+        if update_id is not None:
+            if update_id in processed_updates:
+                logger.info(f"Update {update_id} déjà traité, ignoré (doublon)")
+                return {"ok": True}
+            processed_updates.add(update_id)
+            if len(processed_updates) > MAX_PROCESSED:
+                # Purge simple pour éviter une fuite mémoire
+                processed_updates.clear()
+                processed_updates.add(update_id)
+
         async with httpx.AsyncClient(timeout=60) as client:
 
             # Callback query (boutons inline)
