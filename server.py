@@ -534,6 +534,28 @@ async def debug_ai():
     return result
 
 
+import socket
+
+@app.get("/debug/instance")
+async def debug_instance():
+    """Révèle si plusieurs instances/replicas tournent en même temps (cause de doublons)."""
+    return {
+        "hostname": socket.gethostname(),
+        "pid": os.getpid(),
+        "processed_updates_count": len(processed_updates),
+    }
+
+@app.post("/debug/dedup-test")
+async def debug_dedup_test(request: Request):
+    """Teste la logique anti-doublon indépendamment du token Telegram."""
+    body = await request.json()
+    uid = body.get("update_id")
+    is_dup = uid in processed_updates
+    if not is_dup:
+        processed_updates.add(uid)
+    return {"hostname": socket.gethostname(), "pid": os.getpid(), "was_duplicate": is_dup}
+
+
 @app.get("/debug/models")
 async def debug_models():
     """Liste les modèles réellement disponibles avec les clés configurées."""
