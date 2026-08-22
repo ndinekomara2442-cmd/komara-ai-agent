@@ -40,16 +40,12 @@ GEMINI_MODELS = [
 GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta"
 
 # Chargement dynamique de la base de connaissances
-import json as _json
-import os as _os
-
-_KNOWLEDGE_PATH = _os.path.join(_os.path.dirname(__file__), "knowledge.json")
+_KNOWLEDGE_PATH = os.path.join(os.path.dirname(__file__), "knowledge.json")
 try:
     with open(_KNOWLEDGE_PATH, "r", encoding="utf-8") as _f:
-        KNOWLEDGE = _json.load(_f)
-    logger.info(f"knowledge.json chargé: {len(KNOWLEDGE.get('services', []))} services")
+        KNOWLEDGE = json.load(_f)
 except Exception as _e:
-    logger.warning(f"Impossible de charger knowledge.json: {_e}")
+    print(f"[WARN] Impossible de charger knowledge.json: {_e}")
     KNOWLEDGE = {}
 
 # Accès simplifié
